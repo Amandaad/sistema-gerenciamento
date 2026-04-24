@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studio As Dashboard</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Playfair+Display:wght@600;700&amp;display=swap" rel="stylesheet">
+  <style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font-family: 'DM Sans', sans-serif; }
+
+  .fade-in { animation: fadeIn 0.4s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+
+  .toast-slide { animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+  .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+
+  .modal-bg { animation: modalBgIn 0.2s ease; }
+  @keyframes modalBgIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full w-full overflow-auto" style="background-color: #0f1117;"><!-- Toast -->
+   <div id="toast-container" class="fixed top-4 right-4 z-50"></div><!-- Sidebar + Content -->
+   <div class="flex h-full"><!-- Sidebar -->
+    <aside class="w-64 flex-shrink-0 border-r flex flex-col" style="background-color: #161822; border-color: #2a2d3a;">
+     <div class="p-6 border-b" style="border-color: #2a2d3a;">
+      <h1 id="sidebar-title" class="text-xl font-bold" style="font-family: 'Playfair Display', serif; color: #c4a265;">Studio As</h1>
+      <p class="text-xs mt-1" style="color: #6b7084;">Gerenciamento</p>
+     </div>
+     <nav class="flex-1 p-4 space-y-1"><button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors" style="color: #c4a265; background: #c4a26512;"> <i data-lucide="layout-dashboard" style="width:18px;height:18px;"></i> Dashboard </button> <button onclick="navigate('clients')" id="nav-clients" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors" style="color: #8a8ea0;"> <i data-lucide="users" style="width:18px;height:18px;"></i> Clientes </button>
+     </nav>
+     <div class="p-4 border-t text-xs" style="border-color: #2a2d3a; color: #4a4e63;">
+      © 2024 Studio As
+     </div>
+    </aside><!-- Main -->
+    <main class="flex-1 overflow-auto p-8"><!-- Dashboard View -->
+     <div id="view-dashboard">
+      <h2 id="welcome-msg" class="text-2xl font-bold fade-in" style="color: #e8e9ed; font-family: 'Playfair Display', serif;">Bem-vindo ao painel</h2>
+      <p class="text-sm mt-1 fade-in stagger-1" style="color: #6b7084;">Visão geral do seu estúdio</p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-8">
+       <div class="rounded-xl p-5 card-hover fade-in stagger-1" style="background: #161822; border: 1px solid #2a2d3a;">
+        <div class="flex items-center gap-3 mb-3">
+         <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: #c4a26518;"><i data-lucide="users" style="width:20px;height:20px;color:#c4a265;"></i>
+         </div><span class="text-xs font-medium uppercase tracking-wider" style="color: #6b7084;">Total Clientes</span>
+        </div>
+        <p id="stat-total" class="text-3xl font-bold" style="color: #e8e9ed;">0</p>
+       </div>
+       <div class="rounded-xl p-5 card-hover fade-in stagger-2" style="background: #161822; border: 1px solid #2a2d3a;">
+        <div class="flex items-center gap-3 mb-3">
+         <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: #3b82f618;"><i data-lucide="user-plus" style="width:20px;height:20px;color:#3b82f6;"></i>
+         </div><span class="text-xs font-medium uppercase tracking-wider" style="color: #6b7084;">Este Mês</span>
+        </div>
+        <p id="stat-month" class="text-3xl font-bold" style="color: #e8e9ed;">0</p>
+       </div>
+       <div class="rounded-xl p-5 card-hover fade-in stagger-3" style="background: #161822; border: 1px solid #2a2d3a;">
+        <div class="flex items-center gap-3 mb-3">
+         <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: #10b98118;"><i data-lucide="trending-up" style="width:20px;height:20px;color:#10b981;"></i>
+         </div><span class="text-xs font-medium uppercase tracking-wider" style="color: #6b7084;">Últimos 7 dias</span>
+        </div>
+        <p id="stat-week" class="text-3xl font-bold" style="color: #e8e9ed;">0</p>
+       </div>
+      </div><!-- Recent clients -->
+      <div class="mt-8 fade-in stagger-4">
+       <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold uppercase tracking-wider" style="color: #6b7084;">Clientes Recentes</h3><button onclick="navigate('clients')" class="text-xs font-medium hover:underline" style="color: #c4a265;">Ver todos →</button>
+       </div>
+       <div id="recent-clients" class="space-y-2">
+        <p class="text-sm py-8 text-center" style="color: #4a4e63;">Nenhum cliente cadastrado ainda.</p>
+       </div>
+      </div>
+     </div><!-- Clients View -->
+     <div id="view-clients" class="hidden">
+      <div class="flex items-center justify-between">
+       <div>
+        <h2 class="text-2xl font-bold" style="color: #e8e9ed; font-family: 'Playfair Display', serif;">Clientes</h2>
+        <p class="text-sm mt-1" style="color: #6b7084;">Gerencie sua base de clientes</p>
+       </div><button onclick="openForm()" class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors" style="background: #c4a265; color: #0f1117;" onmouseover="this.style.background='#d4b275'" onmouseout="this.style.background='#c4a265'"> <i data-lucide="plus" style="width:16px;height:16px;"></i> Novo Cliente </button>
+      </div><!-- Search -->
+      <div class="relative mt-6"><i data-lucide="search" style="width:16px;height:16px;color:#6b7084;" class="absolute left-3 top-1/2 -translate-y-1/2"></i> <input id="search-input" type="text" placeholder="Buscar por nome, email ou telefone..." oninput="renderClientList()" class="w-full pl-10 pr-4 py-2.5 rounded-lg text-sm outline-none focus:ring-2" style="background: #161822; border: 1px solid #2a2d3a; color: #e8e9ed; --tw-ring-color: #c4a265;">
+      </div><!-- Client List -->
+      <div id="client-list" class="mt-5 space-y-2">
+       <p class="text-sm py-12 text-center" style="color: #4a4e63;">Nenhum cliente encontrado.</p>
+      </div>
+      <p id="limit-warning" class="hidden text-xs mt-3 text-center" style="color: #ef4444;">⚠ Limite de 999 clientes atingido.</p>
+     </div>
+    </main>
+   </div><!-- Modal Form -->
+   <div id="modal-overlay" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.6);">
+    <div class="modal-bg rounded-xl w-full max-w-md p-6 relative" style="background: #161822; border: 1px solid #2a2d3a;"><button onclick="closeForm()" class="absolute top-4 right-4" style="color: #6b7084;"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
+     <h3 id="form-title" class="text-lg font-bold mb-5" style="color: #e8e9ed; font-family: 'Playfair Display', serif;">Novo Cliente</h3>
+     <form id="client-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+      <div><label for="f-name" class="block text-xs font-medium mb-1.5" style="color: #8a8ea0;">Nome *</label> <input id="f-name" required class="w-full px-3 py-2 rounded-lg text-sm outline-none focus:ring-2" style="background: #0f1117; border: 1px solid #2a2d3a; color: #e8e9ed; --tw-ring-color: #c4a265;">
+      </div>
+      <div><label for="f-email" class="block text-xs font-medium mb-1.5" style="color: #8a8ea0;">Email</label> <input id="f-email" type="email" class="w-full px-3 py-2 rounded-lg text-sm outline-none focus:ring-2" style="background: #0f1117; border: 1px solid #2a2d3a; color: #e8e9ed; --tw-ring-color: #c4a265;">
+      </div>
+      <div><label for="f-phone" class="block text-xs font-medium mb-1.5" style="color: #8a8ea0;">Telefone</label> <input id="f-phone" type="tel" class="w-full px-3 py-2 rounded-lg text-sm outline-none focus:ring-2" style="background: #0f1117; border: 1px solid #2a2d3a; color: #e8e9ed; --tw-ring-color: #c4a265;">
+      </div>
+      <div><label for="f-notes" class="block text-xs font-medium mb-1.5" style="color: #8a8ea0;">Observações</label> <textarea id="f-notes" rows="2" class="w-full px-3 py-2 rounded-lg text-sm outline-none focus:ring-2 resize-none" style="background: #0f1117; border: 1px solid #2a2d3a; color: #e8e9ed; --tw-ring-color: #c4a265;"></textarea>
+      </div>
+      <div class="flex gap-3 pt-2"><button type="button" onclick="closeForm()" class="flex-1 py-2.5 rounded-lg text-sm font-medium" style="background: #2a2d3a; color: #8a8ea0;">Cancelar</button> <button type="submit" id="form-submit-btn" class="flex-1 py-2.5 rounded-lg text-sm font-semibold" style="background: #c4a265; color: #0f1117;">Salvar</button>
+      </div>
+     </form>
+    </div>
+   </div><!-- Delete Confirm -->
+   <div id="delete-overlay" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.6);">
+    <div class="modal-bg rounded-xl w-full max-w-sm p-6 text-center" style="background: #161822; border: 1px solid #2a2d3a;">
+     <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style="background: #ef444418;"><i data-lucide="trash-2" style="width:22px;height:22px;color:#ef4444;"></i>
+     </div>
+     <h3 class="text-lg font-bold mb-2" style="color: #e8e9ed;">Excluir cliente?</h3>
+     <p id="delete-name" class="text-sm mb-5" style="color: #6b7084;">Esta ação não pode ser desfeita.</p>
+     <div class="flex gap-3"><button onclick="closeDelete()" class="flex-1 py-2.5 rounded-lg text-sm font-medium" style="background: #2a2d3a; color: #8a8ea0;">Cancelar</button> <button onclick="confirmDelete()" id="delete-confirm-btn" class="flex-1 py-2.5 rounded-lg text-sm font-semibold" style="background: #ef4444; color: #fff;">Excluir</button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+  // State
+  let clients = [];
+  let editingClient = null;
+  let deletingClient = null;
+  let currentView = 'dashboard';
+
+  const defaultConfig = {
+    studio_name: 'Studio As',
+    welcome_text: 'Bem-vindo ao painel',
+    background_color: '#0f1117',
+    surface_color: '#161822',
+    text_color: '#e8e9ed',
+    primary_color: '#c4a265',
+    secondary_color: '#2a2d3a',
+    font_family: 'DM Sans',
+    font_size: 14
+  };
+
+  // Toast
+  function showToast(msg, type = 'success') {
+    const c = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = 'toast-slide flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium shadow-lg';
+    t.style.background = type === 'success' ? '#10b981' : '#ef4444';
+    t.style.color = '#fff';
+    t.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" style="width:16px;height:16px;"></i> ${msg}`;
+    c.appendChild(t);
+    lucide.createIcons();
+    setTimeout(() => t.remove(), 3000);
+  }
+
+  // Navigation
+  function navigate(view) {
+    currentView = view;
+    document.getElementById('view-dashboard').classList.toggle('hidden', view !== 'dashboard');
+    document.getElementById('view-clients').classList.toggle('hidden', view !== 'clients');
+    document.querySelectorAll('.nav-btn').forEach(b => { b.style.color = '#8a8ea0'; b.style.background = 'transparent'; });
+    const active = document.getElementById('nav-' + view);
+    active.style.color = '#c4a265';
+    active.style.background = '#c4a26512';
+  }
+
+  // Form
+  function openForm(client) {
+    editingClient = client || null;
+    document.getElementById('form-title').textContent = client ? 'Editar Cliente' : 'Novo Cliente';
+    document.getElementById('f-name').value = client ? client.name : '';
+    document.getElementById('f-email').value = client ? (client.email || '') : '';
+    document.getElementById('f-phone').value = client ? (client.phone || '') : '';
+    document.getElementById('f-notes').value = client ? (client.notes || '') : '';
+    document.getElementById('modal-overlay').classList.remove('hidden');
+    lucide.createIcons();
+  }
+
+  function closeForm() {
+    document.getElementById('modal-overlay').classList.add('hidden');
+    editingClient = null;
+  }
+
+  async function handleFormSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('form-submit-btn');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    const data = {
+      name: document.getElementById('f-name').value.trim(),
+      email: document.getElementById('f-email').value.trim(),
+      phone: document.getElementById('f-phone').value.trim(),
+      notes: document.getElementById('f-notes').value.trim(),
+      created_at: editingClient ? editingClient.created_at : new Date().toISOString()
+    };
+
+    let result;
+    if (editingClient) {
+      result = await window.dataSdk.update({ ...editingClient, ...data });
+    } else {
+      if (clients.length >= 999) { showToast('Limite de 999 clientes atingido.', 'error'); btn.disabled = false; btn.textContent = 'Salvar'; return; }
+      result = await window.dataSdk.create(data);
+    }
+
+    if (result.isOk) {
+      showToast(editingClient ? 'Cliente atualizado!' : 'Cliente adicionado!');
+      closeForm();
+    } else {
+      showToast('Erro ao salvar.', 'error');
+    }
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+
+  // Delete
+  function openDelete(client) {
+    deletingClient = client;
+    document.getElementById('delete-name').textContent = `"${client.name}" será removido permanentemente.`;
+    document.getElementById('delete-overlay').classList.remove('hidden');
+    lucide.createIcons();
+  }
+  function closeDelete() { document.getElementById('delete-overlay').classList.add('hidden'); deletingClient = null; }
+
+  async function confirmDelete() {
+    if (!deletingClient) return;
+    const btn = document.getElementById('delete-confirm-btn');
+    btn.disabled = true; btn.textContent = 'Excluindo...';
+    const result = await window.dataSdk.delete(deletingClient);
+    if (result.isOk) { showToast('Cliente excluído!'); closeDelete(); }
+    else { showToast('Erro ao excluir.', 'error'); }
+    btn.disabled = false; btn.textContent = 'Excluir';
+  }
+
+  // Render
+  function renderClientList() {
+    const search = (document.getElementById('search-input')?.value || '').toLowerCase();
+    const filtered = clients.filter(c =>
+      c.name.toLowerCase().includes(search) ||
+      (c.email || '').toLowerCase().includes(search) ||
+      (c.phone || '').toLowerCase().includes(search)
+    );
+
+    const container = document.getElementById('client-list');
+    if (!filtered.length) {
+      container.innerHTML = `<p class="text-sm py-12 text-center" style="color: #4a4e63;">${search ? 'Nenhum resultado encontrado.' : 'Nenhum cliente cadastrado ainda.'}</p>`;
+      return;
+    }
+
+    const existingMap = new Map([...container.children].filter(el => el.dataset.id).map(el => [el.dataset.id, el]));
+    const newIds = new Set(filtered.map(c => c.__backendId));
+
+    // Remove old
+    existingMap.forEach((el, id) => { if (!newIds.has(id)) el.remove(); });
+
+    filtered.forEach((c, i) => {
+      const existing = container.querySelector(`[data-id="${c.__backendId}"]`);
+      if (existing) {
+        updateClientRow(existing, c);
+      } else {
+        const el = createClientRow(c);
+        container.appendChild(el);
+      }
+    });
+    lucide.createIcons();
+    document.getElementById('limit-warning').classList.toggle('hidden', clients.length < 999);
+  }
+
+  function createClientRow(c) {
+    const div = document.createElement('div');
+    div.dataset.id = c.__backendId;
+    div.className = 'flex items-center justify-between p-4 rounded-xl card-hover fade-in';
+    div.style.cssText = 'background: #161822; border: 1px solid #2a2d3a;';
+    updateClientRow(div, c);
+    return div;
+  }
+
+  function updateClientRow(el, c) {
+    const initials = c.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    el.innerHTML = `
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold" style="background: #c4a26520; color: #c4a265;">${initials}</div>
+        <div class="min-w-0">
+          <p class="text-sm font-semibold truncate" style="color: #e8e9ed;">${esc(c.name)}</p>
+          <p class="text-xs truncate" style="color: #6b7084;">${esc(c.email || c.phone || '—')}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1 flex-shrink-0">
+        <button onclick='openForm(clients.find(x=>x.__backendId==="'+c.__backendId+'"))' class="p-2 rounded-lg transition-colors hover:bg-white/5" style="color: #6b7084;">
+          <i data-lucide="pencil" style="width:15px;height:15px;"></i>
+        </button>
+        <button onclick='openDelete(clients.find(x=>x.__backendId==="'+c.__backendId+'"))' class="p-2 rounded-lg transition-colors hover:bg-white/5" style="color: #6b7084;">
+          <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
+        </button>
+      </div>`;
+  }
+
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  function renderDashboard() {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const weekAgo = new Date(now.getTime() - 7 * 86400000);
+
+    document.getElementById('stat-total').textContent = clients.length;
+    document.getElementById('stat-month').textContent = clients.filter(c => new Date(c.created_at) >= monthStart).length;
+    document.getElementById('stat-week').textContent = clients.filter(c => new Date(c.created_at) >= weekAgo).length;
+
+    const recent = [...clients].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
+    const rc = document.getElementById('recent-clients');
+    if (!recent.length) {
+      rc.innerHTML = '<p class="text-sm py-8 text-center" style="color: #4a4e63;">Nenhum cliente cadastrado ainda.</p>';
+      return;
+    }
+    rc.innerHTML = recent.map(c => {
+      const initials = c.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+      const date = new Date(c.created_at).toLocaleDateString('pt-BR');
+      return `<div class="flex items-center justify-between p-3 rounded-lg" style="background: #161822; border: 1px solid #2a2d3a;">
+        <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style="background:#c4a26520;color:#c4a265;">${initials}</div>
+        <span class="text-sm font-medium" style="color:#e8e9ed;">${esc(c.name)}</span></div>
+        <span class="text-xs" style="color:#4a4e63;">${date}</span></div>`;
+    }).join('');
+  }
+
+  // Data SDK
+  const dataHandler = {
+    onDataChanged(data) {
+      clients = data;
+      renderDashboard();
+      if (currentView === 'clients') renderClientList();
+    }
+  };
+
+  // Element SDK
+  async function applyConfig(config) {
+    const name = config.studio_name || defaultConfig.studio_name;
+    const welcome = config.welcome_text || defaultConfig.welcome_text;
+    const font = config.font_family || defaultConfig.font_family;
+    const bg = config.background_color || defaultConfig.background_color;
+    const surface = config.surface_color || defaultConfig.surface_color;
+    const text = config.text_color || defaultConfig.text_color;
+    const primary = config.primary_color || defaultConfig.primary_color;
+    const secondary = config.secondary_color || defaultConfig.secondary_color;
+    const size = config.font_size || defaultConfig.font_size;
+
+    document.getElementById('sidebar-title').textContent = name;
+    document.getElementById('welcome-msg').textContent = welcome;
+
+    document.getElementById('app').style.backgroundColor = bg;
+    document.getElementById('app').style.fontFamily = `${font}, DM Sans, sans-serif`;
+    document.getElementById('app').style.fontSize = size + 'px';
+  }
+
+  // Init
+  (async () => {
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: applyConfig,
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            { get: () => config.background_color || defaultConfig.background_color, set: v => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+            { get: () => config.surface_color || defaultConfig.surface_color, set: v => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+            { get: () => config.text_color || defaultConfig.text_color, set: v => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+            { get: () => config.primary_color || defaultConfig.primary_color, set: v => { config.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); } },
+            { get: () => config.secondary_color || defaultConfig.secondary_color, set: v => { config.secondary_color = v; window.elementSdk.setConfig({ secondary_color: v }); } },
+          ],
+          borderables: [],
+          fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: v => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+          fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: v => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } },
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['studio_name', config.studio_name || defaultConfig.studio_name],
+          ['welcome_text', config.welcome_text || defaultConfig.welcome_text],
+        ])
+      });
+    }
+
+    await window.dataSdk.init(dataHandler);
+    lucide.createIcons();
+  })();
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f1174deb60012fd',t:'MTc3Njk5NTQyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
