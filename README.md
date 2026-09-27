@@ -24,6 +24,7 @@ Projeto inicial em PHP + MySQL para gerenciamento básico de clientes.
 ## Funcionalidades implementadas
 
 - Dashboard inicial (`/`)
+- Central de atendimento do Instagram (`/instagram/index.php`), com fila de conversas, respostas rápidas e envio de mensagens na interface
 - CRUD de clientes:
   - Listagem
   - Criação
